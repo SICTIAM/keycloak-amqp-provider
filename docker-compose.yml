@@ -1,0 +1,63 @@
+version: '3'
+
+#volumes:
+#  postgres_data:
+#    driver: local
+#  rabbitmq_data:
+#    driver: local
+
+services:
+
+  rabbitmq:
+    image: rabbitmq:management
+    container_name: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: "admin"
+      RABBITMQ_DEFAULT_PASS: "Pa55w0rd"
+      RABBITMQ_DEFAULT_VHOST: "/"
+#    volumes:
+#      - rabbitmq_data:/var/lib/rabbitmq/
+    ports:
+      - 15672:15672
+      - 5672:5672
+
+  postgres:
+    image: postgres
+    container_name: postgres
+#    volumes:
+#      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: Pa55w0rd
+
+  keycloak:
+    image: jboss/keycloak
+    container_name: keycloak
+    volumes:
+      - ./providers:/opt/jboss/keycloak/providers/
+#      - ./deployments:/opt/jboss/keycloak/standalone/deployments/
+      - ./configuration:/opt/jboss/keycloak/standalone/configuration/
+#      - ./synaptix-realm.json:/tmp/synaptix-realm.json
+    environment:
+      DB_VENDOR: POSTGRES
+      DB_ADDR: postgres
+      DB_DATABASE: keycloak
+      DB_USER: keycloak
+      DB_PASSWORD: Pa55w0rd
+      KEYCLOAK_USER: admin
+      KEYCLOAK_PASSWORD: Pa55w0rd
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: Pa55w0rd
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_EXCHANGE_NAME: default
+
+      #      KEYCLOAK_IMPORT: /tmp/synaptix-realm.json
+      # Uncomment the line below if you want to specify JDBC parameters. The parameter below is just an example, and it shouldn't be used in production without knowledge. It is highly recommended that you read the PostgreSQL JDBC driver documentation in order to use it.
+      #JDBC_PARAMS: "ssl=true"
+    ports:
+      - 8080:8080
+    depends_on:
+      - postgres
+      - rabbitmq
